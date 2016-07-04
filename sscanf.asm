@@ -1,34 +1,34 @@
 	section .text
 	global _sscanf_asm
-	
-_sscanf_asm:	
+
+_sscanf_asm:
 	push esi
 	push ebx
 	push ecx
-	push edx	
-	
+	push edx
+
 	mov [ShiftResource], dword 0
 	mov [ShiftFormat], dword 0
 	mov [ShiftDestination], dword 28
 	mov [CompliteCount], dword 0
-	
-	mov esi, [esp + 24] ;Format string
-	mov ebx, [esp + 20] ;Resource string
+
+	mov esi, [esp + 24] 		;Format string
+	mov ebx, [esp + 20] 		;Resource string
 	
 _find_first_format_char:
 	mov edx, [ShiftFormat]
-	mov al, [esi + edx]		;if Format[i] == ' ' -> inc i
-	cmp al, '%'				;else if Format[i] == '%' -> inc i
-	jz _FoundPercent		;read F second
-	cmp al, ' '				;read F first
+	mov al, [esi + edx]			;if Format[i] == ' ' -> inc i
+	cmp al, '%'					;else if Format[i] == '%' -> inc i
+	jz _FoundPercent			;read F second
+	cmp al, ' '					;read F first
 	jz _FoundSpace
-	cmp al, 9h				;horiz tab \r
+	cmp al, 9h					;horiz tab \r
 	jz _FoundSpace
-	cmp al, Ah				; \n
+	cmp al, Ah					; \n
 	jz _FoundSpace
-	cmp al, Dh				; \r
+	cmp al, Dh					; \r
 	jz _FoundSpace
-	jmp _ReturnCompliteCount	
+	jmp _ReturnCompliteCount
 _FoundSpace:
 	add [ShiftFormat], dword 1
 	jmp _find_first_format_char
@@ -38,8 +38,8 @@ _FoundPercent:
 	
 _read_second_format_char:
 	mov edx, [ShiftFormat]
-	mov al, [esi + edx]							;if Format[i] == 's' -> inc i 
-	add [ShiftFormat], dword 1					;if Format[i] == ' ' -> read address next container from stack
+	mov al, [esi + edx]			;if Format[i] == 's' -> inc i 
+	add [ShiftFormat], dword 1	;if Format[i] == ' ' -> read address next container from stack
 	cmp al, 's'
 	jz _s_func
 	cmp al, 'S'
@@ -56,8 +56,8 @@ _read_second_format_char:
 	jz _x_func
 	cmp al, 'x'
 	jz _x_func
-	jmp _ReturnCompliteCount			;else GOTO _ReturnCompliteCount
-	
+	jmp _ReturnCompliteCount	;else GOTO _ReturnCompliteCount
+
 _s_func:
 	mov edx, [ShiftDestination]
 	mov eax, [esp + edx]
@@ -86,9 +86,9 @@ _read_next_chr:
 	add [ShiftStringR], dword 1
 	add [ShiftResource], dword 1
 	mov edx, [ShiftResource]
-	mov cl, [ebx + edx]			
-	cmp cl, ' '					
-	jz _ReadStrComplite			
+	mov cl, [ebx + edx]
+	cmp cl, ' '
+	jz _ReadStrComplite
 	cmp cl, 9h
 	jz _ReadStrComplite
 	cmp cl, 0Ah
@@ -119,7 +119,7 @@ _i_func:
 _find_first_int:
 	mov eax, [ShiftResource]
 	xor ecx, ecx
-	mov cl, byte [ebx + eax]		
+	mov cl, byte [ebx + eax]
 	cmp cl, ' '
 	jz _pre_find_first_int
 	cmp cl, 9h
@@ -134,7 +134,7 @@ _find_first_int:
 	jz _findNeg
 	jmp _read_next_int
 _pre_find_first_int:
-	add [ShiftResource], dword 1						
+	add [ShiftResource], dword 1
 	jmp _find_first_int	
 _findNeg:
 	test byte [NegVal], 0Fh
@@ -148,7 +148,7 @@ _read_next_int_resume:
 	add [ShiftResource], dword 1
 	mov eax, [ShiftResource]
 	xor ecx, ecx
-	mov cl, [ebx + eax]		
+	mov cl, [ebx + eax]
 	jmp _read_next_int
 _save_number:
 	cmp cl, 48
@@ -157,7 +157,7 @@ _save_number:
 	jns _NAN_
 	push edx
 	push ebx
-	
+
 	xor ebx, ebx
 	mov ebx, dword [edx]
 	xor edx, edx
@@ -166,11 +166,11 @@ _save_number:
 	mul ebx
 	sub ecx, 48
 	add eax, ecx
-	
+
 	pop ebx
 	pop edx
-	mov dword [edx], eax				
-	jmp _read_next_int_resume	
+	mov dword [edx], eax
+	jmp _read_next_int_resume
 _NAN_:
 	test byte [NegVal], 0Fh
 	jnz _NegInt
@@ -178,9 +178,9 @@ _NAN_:
 	jnz _ReadIntComplite
 	jmp _ReturnCompliteCount
 _NegInt:
-	mov eax, dword [edx]				
+	mov eax, dword [edx]
 	neg eax
-	mov dword [edx], eax	
+	mov dword [edx], eax
 	test dword [ShiftStringR], 0FFFFFFFFh
 	jnz _ReadIntComplite
 	jmp _ReturnCompliteCount
@@ -198,7 +198,7 @@ _x_func:
 _find_first_hex:
 	mov eax, [ShiftResource]
 	xor ecx, ecx
-	mov cl, byte [ebx + eax]		
+	mov cl, byte [ebx + eax]
 	cmp cl, ' '
 	jz _pre_find_first_hex
 	cmp cl, 9h
@@ -213,7 +213,7 @@ _find_first_hex:
 	jz _findNegHex
 	jmp _read_next_hex
 _pre_find_first_hex:
-	add [ShiftResource], dword 1						
+	add [ShiftResource], dword 1
 	jmp _find_first_hex	
 _findNegHex:
 	test byte [NegVal], 0Fh
@@ -227,7 +227,7 @@ _read_next_hex_resume:
 	add [ShiftResource], dword 1
 	mov eax, [ShiftResource]
 	xor ecx, ecx
-	mov cl, [ebx + eax]		
+	mov cl, [ebx + eax]
 	jmp _read_next_hex
 _test_number_hex:
 	cmp cl, 103
@@ -259,7 +259,7 @@ _hex_lower_to_int:
 _save_number_hex:
 	push edx
 	push ebx
-	
+
 	xor ebx, ebx
 	mov ebx, dword [edx]
 	xor edx, edx
@@ -268,11 +268,11 @@ _save_number_hex:
 	mul ebx
 	;sub ecx, 48
 	add eax, ecx
-	
+
 	pop ebx
 	pop edx
-	mov dword [edx], eax				
-	jmp _read_next_hex_resume	
+	mov dword [edx], eax
+	jmp _read_next_hex_resume
 _NAN_hex:
 	test byte [NegVal], 0Fh
 	jnz _NegHex
@@ -280,9 +280,9 @@ _NAN_hex:
 	jnz _ReadHexComplite
 	jmp _ReturnCompliteCount
 _NegHex:
-	mov eax, dword [edx]				
+	mov eax, dword [edx]
 	neg eax
-	mov dword [edx], eax	
+	mov dword [edx], eax
 	test dword [ShiftStringR], 0FFFFFFFFh
 	jnz _ReadHexComplite
 	jmp _ReturnCompliteCount
@@ -301,12 +301,12 @@ _ReturnCompliteCount:
 	pop esi
 
 	mov eax, [CompliteCount];
-	
+
 	ret 
-	
+
 end
 
-	section .data
+	section .bss
 	
 	ShiftResource resb 4
 	ShiftFormat resb 4

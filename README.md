@@ -1,5 +1,6 @@
 # sscanf
 Assembler realization of C `sscanf` function  
+http://www.cplusplus.com/reference/cstdio/sscanf/
 
 #####Signature:  
 `int sscanf_asm(const char * from, const char * format[, list of destinations])`
